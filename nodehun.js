@@ -5,14 +5,8 @@ const dictionary = fs.readFileSync('./files/lv_LV.dic');
 
 const nodehun = new Nodehun(affix, dictionary);
 
-async function analyzeWordCategory({ words, categoryRegex }) {
-    const promises = words.map(async word => {
-        const res = await getParsedWordAnalysis(word);
-        const count = res.reduce((prev, { po }) => po.match(categoryRegex) ? prev + 1 : prev, 0);
-
-        return [word, count];
-    });
-
+async function analyzeWords(words) {
+    const promises = words.map(async word => ([ word, await getParsedWordAnalysis(word) ]));
     return Object.fromEntries(await Promise.all(promises));
 }
 
@@ -28,6 +22,6 @@ function parseWordAnalyisis(analysis) {
 }
 
 module.exports = {
-    analyzeWordCategory
+    analyzeWords
 }
 
