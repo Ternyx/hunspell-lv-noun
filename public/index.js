@@ -10,12 +10,14 @@ async function onSubmitClick() {
     const wordSet = new Set(words);
 
     const mappings = await analyzeWordsRegex([...wordSet]);
-    outputWords(tokens, mappings)
+    const content = outputWords(tokens, mappings)
+    const nodes = generateSpanNodes(content);
+
+    setOutputDivChildren(nodes);
 }
 
 function outputWords(tokens, mappings, targetCategory = 'lietv') {
     let content = [{ text: '', type: null }];
-    outputDiv.innerHTML = '';
     const wordMap = filterWordMapCategory(mappings, targetCategory);
 
     for (let token of tokens) {
@@ -32,20 +34,34 @@ function outputWords(tokens, mappings, targetCategory = 'lietv') {
         }
     }
 
-    content.map(({ text, type }) => {
+    return content;
+}
+
+function generateSpanNodes(content) {
+    return content.map(({ text, type }) => {
         const span = document.createElement('span');
         span.innerHTML = text;
         span.setAttribute("style", `color: ${type === null ? 'initial' : 'blue'};`);
-        outputDiv.appendChild(span);
+        return span;
     });
 }
 
+
+function setOutputDivChildren(nodes) {
+    outputDiv.innerHTML = '';
+    nodes.forEach(node => outputDiv.append(node));
+}
+
+
 function filterWordMapCategory(wordMap, category) {
-    console.log(wordMap);
-    return Object.fromEntries(Object.entries(wordMap).map(([key, value]) => ([
+    //console.log(wordMap);
+    const keyValuePairs = Object.entries(wordMap).map(([key, value]) => ([
         key,
-        value.reduce((prev, curr) => curr.po && curr.po.match(category) ? prev + 1: prev, 0)
-    ])));
+        value.reduce((prev, curr) => curr.po && curr.po.match(category) ? prev + 1 : prev, 0)
+    ]));
+
+    // maybe add original length to "weigh" things in case there are multiple definitions
+    return Object.fromEntries(keyValuePairs);
 }
 
 async function analyzeWordsRegex(body) {
